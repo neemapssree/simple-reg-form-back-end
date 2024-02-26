@@ -11,19 +11,19 @@ app.use(express.json());
 
 mongoose.connect(process.env.MONGO_URL);
 
-app.post("/register", (req, res) => {
+app.post("/register", async (req, res) => {
     const { name, email, password } = req.body;
-    RegisterModel.findOne({ email: email })
-        .then(user => {
-            if (user) {
-                res.status(400).json({ message: 'User already exists' });
-            } else {
-                RegisterModel.create({ name: name, email: email, password: password })
-                    .then(result => res.status(201).json(result))
-                    .catch(err => res.status(500).json({ message: 'Error creating user', error: err }));
-            }
-        })
-        .catch(err => res.status(500).json({ message: 'Server error', error: err }));
+    try{
+        const user = await RegisterModel.findOne({ email: email });
+        if (user) {
+            return res.status(400).json('User already exists'); // Added return to prevent execution of further code
+        } else {
+            const result = await RegisterModel.create({ name: name, email: email, password: password });
+            return res.status(200).json('Registered successfully'); // Added return to prevent execution of further code
+        }
+    }catch (error) {
+        return res.status(500).json('Error creating user'); // Added return and corrected the syntax for error handling
+    }
 });
 
 
